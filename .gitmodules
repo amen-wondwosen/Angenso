@@ -1,0 +1,3 @@
+[submodule "AniListPy"]
+	path = AniListPy
+	url = https://github.com/amen-wondwosen/AniListPy.git
