@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import time
 
-from AniListPy import anilistpy
+from AniListPy.anilistpy import AniList
 
 def run(media_dir:Path=None, media_type="ANIME", start_page=1) -> None:
     if not media_dir: media_dir = Path("./db/anilist_files/")
@@ -15,32 +15,34 @@ def run(media_dir:Path=None, media_type="ANIME", start_page=1) -> None:
         media_dir.mkdir(parents=True)
 
     page = start_page
-    al_client = anilistpy.AniList()
+    al_client = AniList()
 
     while True:
         response = al_client.query_page(page_num=page, media_type=media_type)
-        
-        if len(response["data"]["Page"]["media"]) == 0:
-            print("Reached last page.\nStopping program.")
-            return
 
         for media in response["data"]["Page"]["media"]:
             filename = media_dir / f"{media['id']}.json"
+
             if filename.exists():
                 print('Skipping "{}"'.format(media["title"]["romaji"]))
                 continue
 
             else:
-                if media_type.upper() == "ANIME":
-                    media_full_data = al_client.query_anime_id(media["id"])
-                else:
-                    media_full_data = al_client.query_manga_id(media["id"])
+                # if media_type.upper() == "ANIME":
+                #     media_full_data = al_client.query_anime_id(media["id"])
+                # else:
+                #     media_full_data = al_client.query_manga_id(media["id"])
                 
+                # Wait to prevent hitting rate limit
                 time.sleep(1)
+
                 print("{} \t|\t {}".format(media["id"], media["title"]["romaji"]))
 
             with filename.open("w+", encoding="utf-8") as outfile:
-                json.dump(media_full_data, outfile, indent=4, ensure_ascii=False)
+                json.dump(media, outfile, indent=4, ensure_ascii=False)
+
+        # Do not continue if next request will be empty
+        if response["data"]["Page"]["pageInfo"]["hasNextPage"] == False: break
 
         page += 1
 
