@@ -5,6 +5,9 @@ import time
 
 from AniListPy.anilistpy import AniList
 
+from utils.logging import get_logger
+
+LOGGER = get_logger(__name__)
 
 DEFAULT_MEDIA_DIR = "./db/anilist_files/"
 
