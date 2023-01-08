@@ -5,14 +5,16 @@ import time
 
 from AniListPy.anilistpy import AniList
 
-def run(media_dir:Path=None, media_type="ANIME", start_page=1) -> None:
-    if not media_dir: media_dir = Path("./db/anilist_files/")
+
+DEFAULT_MEDIA_DIR = "./db/anilist_files/"
+
+def run(media_dir:Path,
+        media_type="ANIME",
+        start_page=1) -> None:
 
     if not isinstance(media_dir, Path):
-        media_dir = Path(media_dir)
-
-    if not media_dir.exists():
-        media_dir.mkdir(parents=True)
+        media_dir = Path(media_dir).resolve()
+    media_dir.mkdir(parents=True, exist_ok=True)
 
     page = start_page
     al_client = AniList()
