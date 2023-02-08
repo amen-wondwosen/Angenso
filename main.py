@@ -59,7 +59,7 @@ def scrap_media(
 
             # TODO: Skip old entries only if looking at new entries
             if (all_ != True) and dest_path.exists():
-                logger.info(f'Skipped {AL_id:<6} | <{title}>...')
+                logger.debug(f'Skipped {AL_id:<6} | <{title}>...')
                 continue
 
             try:
