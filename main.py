@@ -31,7 +31,7 @@ def scrap_media(
 
     if not isinstance(base_path, Path):
         base_path = Path(base_path).resolve()
-    # base_path.mkdir(parents=True, exist_ok=True)
+    base_path.mkdir(parents=True, exist_ok=True)
 
     # normalize media type
     if not media_type.isupper(): media_type = media_type.upper()
