@@ -117,3 +117,6 @@ dmypy.json
 *.json
 output.txt
 testest.py
+
+# location of scripts
+Scripts/
