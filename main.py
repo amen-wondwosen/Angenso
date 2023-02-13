@@ -57,25 +57,28 @@ def scrap_media(
             # Build the filepath using the MAL id as the filename
             dest_path = base_path / f"{AL_id}.json"
 
+            # Keep a flag to check if the media entry is new or not
+            is_existing_entry = dest_path.exists()
+
             # TODO: Skip old entries only if looking at new entries
-            if (all_ != True) and dest_path.exists():
+            if (all_ != True) and is_existing_entry:
                 logger.debug(f'Skipped {AL_id:<6} | <{title}>...')
                 continue
 
             try:
                 # Compare the data pulled to the existing copy
                 # and skip if there is no difference
-                if dest_path.exists():
+                if is_existing_entry:
                     with dest_path.open("r", encoding="utf-8") as infile:
                         local_data = json.load(infile)
 
                     if media_metadata == local_data: continue
 
-                # Dump metadata to a json file
+                # Dump metadata to file
                 with dest_path.open("w+", encoding="utf-8") as outfile:
                     json.dump(media_metadata, outfile, indent=4, ensure_ascii=False)
 
-                if all_ and dest_path.exists():
+                if all_ and is_existing_entry:
                     # Updating existing media entry
                     logger.info(f'Updated {AL_id:<6} | <{title}>...')
                 else:
@@ -86,6 +89,7 @@ def scrap_media(
                 logger.error("Program interrupted by keyboard shorcut.")
                 raise
             except Exception:
+                # TODO: Log what type of error occured
                 logger.error("Error encountered when creating file {}.".format(dest_path.name))
                 raise
 
