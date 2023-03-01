@@ -47,6 +47,12 @@ def scrap_media(
             sort_new=sort_new
         )
 
+        if "errors" in response.keys():
+            logger.error(f'Error occurred with AniList API on page {page}.')
+            for error_msg in response["errors"]:
+                logger.error(str(error_msg))
+            break
+
         current_page = response["data"]["Page"]["pageInfo"]["currentPage"]
         has_next_page = response["data"]["Page"]["pageInfo"]["hasNextPage"]
 
