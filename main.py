@@ -75,8 +75,14 @@ def scrap_media(
                 # Compare the data pulled to the existing copy
                 # and skip if there is no difference
                 if is_existing_entry:
-                    with dest_path.open("r", encoding="utf-8") as infile:
-                        local_data = json.load(infile)
+                    try:
+                        with dest_path.open("r", encoding="utf-8") as infile:
+                            local_data = json.load(infile)
+                    except json.decoder.JSONDecodeError:
+                        # Since new data will be dumped to the file, there is no need
+                        # to delete the file.
+                        logger.debug(f"An empty file was discovered for id: <{AL_id}>.")
+                        local_data = dict()
 
                     if media_metadata == local_data: continue
 
