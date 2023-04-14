@@ -15,6 +15,10 @@ class AniListAPIHandler(APIHandler):
         errored_pages = []
         page = start_page
 
+        # (page <= self.DEFAULT_PAGE_LIMIT) is used over
+        # (page <= start_page+self.DEFAULT_PAGE_LIMIT) is because the program
+        # assumes that this clause will only be used when looking at the first
+        # x number of pages for new entries.
         while all_ or (page <= self.DEFAULT_PAGE_LIMIT):
             self._logger.debug(f"Querying page {page}.")
             response = self.client.query_page(
