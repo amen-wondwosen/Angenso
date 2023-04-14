@@ -2,10 +2,11 @@ from argparse import ArgumentParser
 import json
 from pathlib import Path
 
-from AniListPy.anilistpy import AniList
+# from AniListPy.anilistpy import AniList
 
+from api.anilisthandler import AniListAPICallHandler
 from utils.logging import get_logger
-from utils.datatracker import DataTracker
+# from utils.datatracker import DataTracker
 
 logger = get_logger(__name__, write_to_file=True)
 
@@ -34,168 +35,56 @@ def scrap_media(
         base_path = Path(base_path).resolve()
     base_path.mkdir(parents=True, exist_ok=True)
 
-    # Create a list to store pages where an error code 500 is returned.
-    errored_pages = []
-
     # normalize media type
     if not media_type.isupper(): media_type = media_type.upper()
 
-    page = start_page
-    al_client = AniList()
+    api_handler = AniListAPICallHandler()
 
-    # while True:
-    while all_ or (page <= page_limit):
-        response = al_client.query_page(
-            page_num=page,
-            media_type=media_type,
-            sort_new=sort_new
-        )
+    for uid, title, media_metadata in api_handler.get_all(start_page, media_type, all_=all_):
+        # Build the filepath using the MAL id as the filename
+        dest_path = base_path / f"{uid}.json"
 
-        if "errors" in response.keys():
-            logger.error(f'Error occurred with AniList API on page {page}.')
-            for error_msg in response["errors"]:
-                logger.error(f"Status Code {error_msg['status']} | {error_msg['message']}...")
-            
-            logger.error(f"Storing page {page} for later retry.")
-            errored_pages.append(page)
-            
-            # Do not continue if next request will be empty
-            if has_next_page:
-                page += 1
+        # Keep a flag to check if the media entry is new or not
+        is_existing_entry = dest_path.exists()
+
+        # TODO: Skip old entries only if looking at new entries
+        if (all_ != True) and is_existing_entry:
+            logger.debug(f'Skipped {uid:<6} | <{title}>...')
+            continue
+
+        try:
+            # Compare the data pulled to the existing copy
+            # and skip if there is no difference
+            if is_existing_entry:
+                try:
+                    with dest_path.open("r", encoding="utf-8") as infile:
+                        local_data = json.load(infile)
+                except json.decoder.JSONDecodeError:
+                    # Since new data will be dumped to the file, there is no need
+                    # to delete the file.
+                    logger.debug(f"An empty file was discovered for id: <{uid}>.")
+                    local_data = dict()
+
+                if media_metadata == local_data: continue
+
+            # Dump metadata to file
+            with dest_path.open("w+", encoding="utf-8") as outfile:
+                json.dump(media_metadata, outfile, indent=4, ensure_ascii=False)
+
+            if all_ and is_existing_entry:
+                # Updating existing media entry
+                logger.info(f'Updated {uid:<6} | <{title}>...')
             else:
-                break
-
-            continue
-
-        current_page = response["data"]["Page"]["pageInfo"]["currentPage"]
-        has_next_page = response["data"]["Page"]["pageInfo"]["hasNextPage"]
-
-        for media_metadata in response["data"]["Page"]["media"]:
-            AL_id = media_metadata["id"]
-            title = media_metadata["title"]["romaji"]
-
-            # Build the filepath using the MAL id as the filename
-            dest_path = base_path / f"{AL_id}.json"
-
-            # Keep a flag to check if the media entry is new or not
-            is_existing_entry = dest_path.exists()
-
-            # TODO: Skip old entries only if looking at new entries
-            if (all_ != True) and is_existing_entry:
-                logger.debug(f'Skipped {AL_id:<6} | <{title}>...')
-                continue
-
-            try:
-                # Compare the data pulled to the existing copy
-                # and skip if there is no difference
-                if is_existing_entry:
-                    try:
-                        with dest_path.open("r", encoding="utf-8") as infile:
-                            local_data = json.load(infile)
-                    except json.decoder.JSONDecodeError:
-                        # Since new data will be dumped to the file, there is no need
-                        # to delete the file.
-                        logger.debug(f"An empty file was discovered for id: <{AL_id}>.")
-                        local_data = dict()
-
-                    if media_metadata == local_data: continue
-
-                # Dump metadata to file
-                with dest_path.open("w+", encoding="utf-8") as outfile:
-                    json.dump(media_metadata, outfile, indent=4, ensure_ascii=False)
-
-                if all_ and is_existing_entry:
-                    # Updating existing media entry
-                    logger.info(f'Updated {AL_id:<6} | <{title}>...')
-                else:
-                    # Adding new media entry
-                    logger.info(f'Scrapped {AL_id:<6} | <{title}>...')
-            except KeyboardInterrupt:
-                # Manual terminal of program
-                logger.error("Program interrupted by keyboard shorcut.")
-                raise
-            except Exception:
-                # TODO: Log what type of error occured
-                logger.error("Error encountered when creating file {}.".format(dest_path.name))
-                raise
-
-        # Do not continue if next request will be empty
-        if has_next_page:
-            page += 1
-        else:
-            break
-
-    # TODO: Refactor code to avoid duplicate loops.
-    # End program here if there are no errored pages
-    if len(errored_pages) == 0: return
-    # Retry the pages that returned an internal api server error
-    errored_pages_string = ", ".join([str(p) for p in errored_pages])
-    print("The errored pages are: " + errored_pages_string)
-    for page in errored_pages:
-        logger.info(f"Retrying to query search page {page}...")
-        response = al_client.query_page(
-            page_num=page,
-            media_type=media_type,
-            sort_new=sort_new
-        )
-
-        if "errors" in response.keys():
-            logger.error(f'Error occurred on retry with AniList API on page {page}.')
-            for error_msg in response["errors"]:
-                logger.error(f"Status Code {error_msg['status']} | {error_msg['message']}...")            
-            continue
-
-        current_page = response["data"]["Page"]["pageInfo"]["currentPage"]
-        has_next_page = response["data"]["Page"]["pageInfo"]["hasNextPage"]
-
-        for media_metadata in response["data"]["Page"]["media"]:
-            AL_id = media_metadata["id"]
-            title = media_metadata["title"]["romaji"]
-
-            # Build the filepath using the MAL id as the filename
-            dest_path = base_path / f"{AL_id}.json"
-
-            # Keep a flag to check if the media entry is new or not
-            is_existing_entry = dest_path.exists()
-
-            # TODO: Skip old entries only if looking at new entries
-            if (all_ != True) and is_existing_entry:
-                logger.debug(f'Skipped {AL_id:<6} | <{title}>...')
-                continue
-
-            try:
-                # Compare the data pulled to the existing copy
-                # and skip if there is no difference
-                if is_existing_entry:
-                    try:
-                        with dest_path.open("r", encoding="utf-8") as infile:
-                            local_data = json.load(infile)
-                    except json.decoder.JSONDecodeError:
-                        # Since new data will be dumped to the file, there is no need
-                        # to delete the file.
-                        logger.debug(f"An empty file was discovered for id: <{AL_id}>.")
-                        local_data = dict()
-
-                    if media_metadata == local_data: continue
-
-                # Dump metadata to file
-                with dest_path.open("w+", encoding="utf-8") as outfile:
-                    json.dump(media_metadata, outfile, indent=4, ensure_ascii=False)
-
-                if all_ and is_existing_entry:
-                    # Updating existing media entry
-                    logger.info(f'Updated {AL_id:<6} | <{title}>...')
-                else:
-                    # Adding new media entry
-                    logger.info(f'Scrapped {AL_id:<6} | <{title}>...')
-            except KeyboardInterrupt:
-                # Manual terminal of program
-                logger.error("Program interrupted by keyboard shorcut.")
-                raise
-            except Exception:
-                # TODO: Log what type of error occured
-                logger.error("Error encountered when creating file {}.".format(dest_path.name))
-                raise
+                # Adding new media entry
+                logger.info(f'Scrapped {uid:<6} | <{title}>...')
+        except KeyboardInterrupt:
+            # Manual terminal of program
+            logger.error("Program interrupted by keyboard shorcut.")
+            raise
+        except Exception:
+            # TODO: Log what type of error occured
+            logger.error("Error encountered when creating file {}.".format(dest_path.name))
+            raise
 
 
 if __name__ == '__main__':
