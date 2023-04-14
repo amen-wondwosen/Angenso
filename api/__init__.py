@@ -1,4 +1,4 @@
-class APICallHandler:
+class APIHandler:
     def __init__(self) -> None:
         self.DEFAULT_PAGE_LIMIT = 5     # Max number of pages to look at
 

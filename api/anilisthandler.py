@@ -1,9 +1,9 @@
 from AniListPy.anilistpy import AniList
 
-from api import APICallHandler
+from api import APIHandler
 from utils.logging import get_logger
 
-class AniListAPICallHandler(APICallHandler):
+class AniListAPIHandler(APIHandler):
     """A class for the purpose of handling """
     def __init__(self) -> None:
         super().__init__()

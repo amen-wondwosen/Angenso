@@ -4,7 +4,7 @@ from pathlib import Path
 
 # from AniListPy.anilistpy import AniList
 
-from api.anilisthandler import AniListAPICallHandler
+from api.anilisthandler import AniListAPIHandler
 from utils.logging import get_logger
 # from utils.datatracker import DataTracker
 
@@ -38,7 +38,7 @@ def scrap_media(
     # normalize media type
     if not media_type.isupper(): media_type = media_type.upper()
 
-    api_handler = AniListAPICallHandler()
+    api_handler = AniListAPIHandler()
 
     for uid, title, media_metadata in api_handler.get_all(start_page, media_type, all_=all_):
         # Build the filepath using the MAL id as the filename
