@@ -9,7 +9,7 @@ class AniListAPIHandler(APIHandler):
         super().__init__()
 
         self.client = AniList()
-        self._logger = get_logger(__name__, write_to_file=False)
+        self._logger = get_logger(__name__, write_to_file=True)
 
     def get_all(self, start_page, media_type, all_: bool = False, retry_once: bool = True):
         errored_pages = []
