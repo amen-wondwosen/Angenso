@@ -9,10 +9,8 @@ class MyAnimeListAPIHandler(APIHandler):
         super().__init__()
 
         self.base_url = "https://api.jikan.moe/v4"
-        self._logger = get_logger(__name__, write_to_file=False)
 
-    def get_all(self, start_page, media_type, all_: bool = False, retry_once: bool = True):
-        errored_pages = []
+    def get_all(self, start_page, media_type, all_: bool = False):
         page = start_page
         session = self._create_session()
         url = f"{self.base_url}/{media_type.lower()}"
@@ -32,7 +30,6 @@ class MyAnimeListAPIHandler(APIHandler):
             req = session.get(url, params=params)
             response = req.json()
 
-            current_page = response["pagination"]["current_page"]
             has_next_page = response["pagination"]["has_next_page"]
 
             for media_metadata in response["data"]:

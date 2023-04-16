@@ -2,16 +2,11 @@ from argparse import ArgumentParser
 import json
 from pathlib import Path
 
-# from AniListPy.anilistpy import AniList
-
 from api.anilisthandler import AniListAPIHandler
 from api.myanimelisthandler import MyAnimeListAPIHandler
 from utils.logging import get_logger
-# from utils.datatracker import DataTracker
 
 logger = get_logger(__name__, write_to_file=True)
-
-DEFAULT_PAGE_LIMIT = 3  # max number of pages to search
 
 class DataSourceNotFoundException(Exception):
     pass
@@ -24,7 +19,6 @@ def main(a:ArgumentParser):
     scrap_media(
         base_path=dest,
         datasource=args.datasource,
-        page_limit=args.page_limit,
         media_type=args.media_type, 
         all_=args.all
     )
@@ -32,10 +26,8 @@ def main(a:ArgumentParser):
 def scrap_media(
         base_path: Path,
         datasource: str,
-        page_limit: int = DEFAULT_PAGE_LIMIT,
         media_type: str = "ANIME",
         start_page: int = 1,
-        sort_new: bool = True,
         all_: bool = False):
 
     if not isinstance(base_path, Path):
@@ -129,10 +121,6 @@ if __name__ == '__main__':
     parser.add_argument(
         "-d", "--destination", type=str, required=True,
         help="where to save files"
-    )
-    parser.add_argument(
-        "-p", "--page_limit", type=int, default=DEFAULT_PAGE_LIMIT,
-        required=False, help="number of pages to look at"
     )
     parser.add_argument(
         "-a", "--all", action="store_true",
