@@ -4,7 +4,6 @@ from api import APIHandler
 from utils.logging import get_logger
 
 class AniListAPIHandler(APIHandler):
-    """A class for the purpose of handling """
     def __init__(self) -> None:
         super().__init__()
 
@@ -23,7 +22,7 @@ class AniListAPIHandler(APIHandler):
             self._logger.debug(f"Querying page {page}.")
             response = self.client.query_page(
                 page_num=page,
-                media_type=media_type,
+                media_type=media_type.upper(),
                 sort_new=True
             )
         

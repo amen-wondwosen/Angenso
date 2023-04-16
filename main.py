@@ -5,6 +5,7 @@ from pathlib import Path
 # from AniListPy.anilistpy import AniList
 
 from api.anilisthandler import AniListAPIHandler
+from api.myanimelisthandler import MyAnimeListAPIHandler
 from utils.logging import get_logger
 # from utils.datatracker import DataTracker
 
@@ -12,19 +13,25 @@ logger = get_logger(__name__, write_to_file=True)
 
 DEFAULT_PAGE_LIMIT = 3  # max number of pages to search
 
+class DataSourceNotFoundException(Exception):
+    pass
+
 def main(a:ArgumentParser):
     args = a.parse_args()
 
     dest = Path(args.destination)
 
     scrap_media(
-        base_path=dest, page_limit=args.page_limit,
+        base_path=dest,
+        datasource=args.datasource,
+        page_limit=args.page_limit,
         media_type=args.media_type, 
         all_=args.all
     )
 
 def scrap_media(
         base_path: Path,
+        datasource: str,
         page_limit: int = DEFAULT_PAGE_LIMIT,
         media_type: str = "ANIME",
         start_page: int = 1,
@@ -35,13 +42,11 @@ def scrap_media(
         base_path = Path(base_path).resolve()
     base_path.mkdir(parents=True, exist_ok=True)
 
-    # normalize media type
-    if not media_type.isupper(): media_type = media_type.upper()
-
-    api_handler = AniListAPIHandler()
+    datasource_handler_dict = {"al": AniListAPIHandler, "mal": MyAnimeListAPIHandler}    
+    api_handler = datasource_handler_dict[datasource]()
 
     for uid, title, media_metadata in api_handler.get_all(start_page, media_type, all_=all_):
-        # Build the filepath using the MAL id as the filename
+        # Build the filepath using the id as the filename
         dest_path = base_path / f"{uid}.json"
 
         # Keep a flag to check if the media entry is new or not
@@ -90,6 +95,10 @@ def scrap_media(
 if __name__ == '__main__':
     parser = ArgumentParser()
 
+    parser.add_argument(
+        "datasource", type=str, choices=["al", "mal"],
+        help="what datasource to search"
+    )
     parser.add_argument(
         "media_type", choices=["anime", "manga"],
         help="what type of media"
