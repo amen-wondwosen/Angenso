@@ -26,7 +26,6 @@ class MyAnimeListAPIHandler(APIHandler):
                 "sort": "desc"
             }
 
-            self._logger.debug(f"Querying page {page}.")
             req = session.get(url, params=params)
             response = req.json()
 
