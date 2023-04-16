@@ -45,6 +45,8 @@ def scrap_media(
     datasource_handler_dict = {"al": AniListAPIHandler, "mal": MyAnimeListAPIHandler}    
     api_handler = datasource_handler_dict[datasource]()
 
+    log_template = "{status} {datasource} {id:<6} | <{title}>..."
+
     for uid, title, media_metadata in api_handler.get_all(start_page, media_type, all_=all_):
         # Build the filepath using the id as the filename
         dest_path = base_path / f"{uid}.json"
@@ -54,7 +56,13 @@ def scrap_media(
 
         # TODO: Skip old entries only if looking at new entries
         if (all_ != True) and is_existing_entry:
-            logger.debug(f'Skipped {uid:<6} | <{title}>...')
+            # logger.debug(f'Skipped {uid:<6} | <{title}>...')
+            logger.debug(log_template.format(
+                status="Skipped",
+                datasource=datasource,
+                id=uid,
+                title=title
+            ))
             continue
 
         try:
@@ -67,7 +75,7 @@ def scrap_media(
                 except json.decoder.JSONDecodeError:
                     # Since new data will be dumped to the file, there is no need
                     # to delete the file.
-                    logger.debug(f"An empty file was discovered for id: <{uid}>.")
+                    logger.debug(f"An empty file was discovered for {datasource} id: <{uid}>.")
                     local_data = dict()
 
                 if media_metadata == local_data: continue
@@ -78,10 +86,22 @@ def scrap_media(
 
             if all_ and is_existing_entry:
                 # Updating existing media entry
-                logger.info(f'Updated {uid:<6} | <{title}>...')
+                # logger.info(f'Updated {uid:<6} | <{title}>...')
+                logger.info(log_template.format(
+                    status="Updated",
+                    datasource=datasource,
+                    id=uid,
+                    title=title
+                ))
             else:
                 # Adding new media entry
-                logger.info(f'Scrapped {uid:<6} | <{title}>...')
+                # logger.info(f'Scrapped {uid:<6} | <{title}>...')
+                logger.info(log_template.format(
+                    status="Scrapped",
+                    datasource=datasource,
+                    id=uid,
+                    title=title
+                ))
         except KeyboardInterrupt:
             # Manual terminal of program
             logger.error("Program interrupted by keyboard shorcut.")
