@@ -42,7 +42,10 @@ def scrap_media(
         base_path = Path(base_path).resolve()
     base_path.mkdir(parents=True, exist_ok=True)
 
-    datasource_handler_dict = {"al": AniListAPIHandler, "mal": MyAnimeListAPIHandler}    
+    datasource_handler_dict = {
+        "anilist": AniListAPIHandler,
+        "myanimelist": MyAnimeListAPIHandler
+    }
     api_handler = datasource_handler_dict[datasource]()
 
     log_template = "{status} {datasource} {id:<6} | <{title}>..."
@@ -116,7 +119,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
 
     parser.add_argument(
-        "datasource", type=str, choices=["al", "mal"],
+        "datasource", type=str, choices=["anilist", "myanimelist"],
         help="what datasource to search"
     )
     parser.add_argument(
