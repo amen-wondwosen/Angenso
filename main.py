@@ -8,9 +8,6 @@ from utils.logging import get_logger
 
 logger = get_logger(__name__, write_to_file=True)
 
-class DataSourceNotFoundException(Exception):
-    pass
-
 def main(a:ArgumentParser):
     args = a.parse_args()
 
