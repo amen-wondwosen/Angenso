@@ -72,6 +72,11 @@ def scrap_media(
 
                 if media_metadata == local_data: continue
 
+                # Update the local data with the new information
+                # and save it
+                local_data.update(media_metadata)
+                media_metadata = local_data
+
             # Dump metadata to file
             with dest_path.open("w+", encoding="utf-8") as outfile:
                 json.dump(media_metadata, outfile, indent=4, ensure_ascii=False)
