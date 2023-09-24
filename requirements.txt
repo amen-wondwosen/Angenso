@@ -1,7 +1,7 @@
-certifi==2022.12.7
-charset-normalizer==2.0.10
+certifi==2023.7.22
+charset-normalizer==3.2.0
 idna==3.4
-pyrate-limiter==2.9.0
-requests==2.27.1
-requests-ratelimiter==0.4.0
-urllib3==1.26.8
+pyrate-limiter==2.10.0
+requests==2.31.0
+requests-ratelimiter==0.4.1
+urllib3==2.0.5
