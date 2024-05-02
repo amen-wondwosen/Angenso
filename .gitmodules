@@ -1,0 +1,3 @@
+[submodule "AniListPy"]
+	path = AniListPy
+	url = https://github.com/disbxys/AniListPy.git
